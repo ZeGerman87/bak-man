@@ -20,6 +20,7 @@ export function roomPlan(index: number): RoomPlan {
 export interface Difficulty {
   bakSpeed: number;
   vacSpeed: number;
+  vacCount: number;
   frightenedMs: number;
 }
 
@@ -28,6 +29,7 @@ export function difficulty(index: number): Difficulty {
   return {
     bakSpeed: 6 + t * 0.1,
     vacSpeed: 4.7 + t * 0.16,
+    vacCount: index < ROOMS.length ? 3 : 4, // first loop of the house starts gentle with 3
     frightenedMs: Math.max(2000, 6000 - t * 350),
   };
 }

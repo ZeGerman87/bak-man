@@ -29,7 +29,7 @@ const BOSS_EXIT: Tile = { c: 9, r: 12 };
 const READY_TIME = 1.4;
 const DEATH_TIME = 1.1;
 const CLEAR_TIME = 1.2;
-const VAC_RELEASE = 1.6; // seconds between each vacuum leaving the dock
+const VAC_RELEASE = 5; // seconds between each vacuum leaving the dock
 const INVULN_TIME = 2.2; // grace period after (re)spawning
 
 export class Game {
@@ -85,9 +85,9 @@ export class Game {
     return x >= 0 && Math.hypot(x - (this.vp.cssW - 54), y - 30) < 20;
   }
 
-  private spawnVacuums(speed: number): void {
+  private spawnVacuums(speed: number, count: number): void {
     const homes = this.layout.vacuumHomes;
-    this.vacuums = VAC_TYPES.map(
+    this.vacuums = VAC_TYPES.slice(0, count).map(
       (type, i) => new Vacuum(type, homes[i % homes.length], DOCK_EXIT, speed, i * VAC_RELEASE),
     );
   }
@@ -122,7 +122,7 @@ export class Game {
       this.vacuums = this.makeMinions(diff.vacSpeed);
     } else {
       this.boss = null;
-      this.spawnVacuums(diff.vacSpeed);
+      this.spawnVacuums(diff.vacSpeed, diff.vacCount);
     }
     this.audio.music(this.isBoss ? 'boss' : 'house');
     this.mode = 'ready';
@@ -134,7 +134,7 @@ export class Game {
     this.bak.reset(this.layout.bakSpawn);
     this.bak.setSpeed(diff.bakSpeed);
     this.vacuums = this.isBoss ? this.makeMinions(diff.vacSpeed) : [];
-    if (!this.isBoss) this.spawnVacuums(diff.vacSpeed);
+    if (!this.isBoss) this.spawnVacuums(diff.vacSpeed, diff.vacCount);
     this.elapsed = 0;
     this.frightenedT = 0;
     this.invulnT = INVULN_TIME;
