@@ -319,6 +319,7 @@ export class Game {
     if (this.toysSpawned < TOY_THRESHOLDS.length && frac >= TOY_THRESHOLDS[this.toysSpawned]) {
       this.toy = spawnToy(this.roomIndex, this.toysSpawned);
       this.toysSpawned++;
+      this.effects.poof(this.vp.cx(this.toy.tile.c), this.vp.cy(this.toy.tile.r), '#ffcf5a', 10);
     }
     if (this.toy) {
       this.toy.timer -= dt;
