@@ -15,11 +15,12 @@ export const TOY_DURATION = 8;
 /** Bacon-eaten fractions that trigger the two toy appearances per room. */
 export const TOY_THRESHOLDS = [0.25, 0.6];
 
-export function toyForRoom(roomIndex: number): { type: string; value: number } {
-  return { type: TOY_TYPES[roomIndex % TOY_TYPES.length], value: 100 + roomIndex * 100 };
+export function toyForRoom(roomIndex: number, appearance = 0): { type: string; value: number } {
+  // Cycle through all four toys so each room shows two different ones.
+  return { type: TOY_TYPES[(roomIndex * 2 + appearance) % TOY_TYPES.length], value: 100 + roomIndex * 100 };
 }
 
-export function spawnToy(roomIndex: number): Toy {
-  const { type, value } = toyForRoom(roomIndex);
+export function spawnToy(roomIndex: number, appearance = 0): Toy {
+  const { type, value } = toyForRoom(roomIndex, appearance);
   return { tile: { ...TOY_SPOT }, type, value, timer: TOY_DURATION };
 }

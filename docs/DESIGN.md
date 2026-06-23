@@ -55,10 +55,15 @@ flips all vacuums between "go to your home corner" and "hunt" phases.
   reboots. Successive chomps on one bone score **200 → 400 → 800 → 1600**.
 - The frightened state flashes white as a warning just before it ends.
 
-## Bonus toys (the "fruit")
+## Bonus toys (power-ups)
 - After Bak has eaten a set number of bacon strips (and again later in the room), a **toy** appears
-  near the dock for a while: tennis ball / rubber duck / slipper / food bowl. Worth escalating bonus
-  points by room.
+  near the dock for a while. Each toy grants points **plus** a distinct power-up (two different toys
+  per room, cycling through all four):
+  - 🎾 **Tennis ball** — *Fetch frenzy*: Bak speeds up (~5s).
+  - 🦆 **Rubber duck** — *Squeak!*: all vacuums panic and flee (~6s), like a free bone.
+  - 🥿 **Slipper** — *Gotcha*: vacuums freeze in place (~3s).
+  - 🥣 **Food bowl** — *Jackpot*: a big point bonus (3×).
+- Each pickup shows its effect (FETCH! / SQUEAK! / FREEZE! / +points), a sparkle, and a sound.
 
 ## Scoring & persistence
 - Bacon 10 · bone 50 · frightened-vacuum chain 200/400/800/1600 · toys 100–1000 by room · room-clear bonus.

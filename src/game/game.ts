@@ -50,6 +50,9 @@ export class Game {
   private toysSpawned = 0;
   private invulnT = 0;
   private joystick = new Joystick();
+  private bakBaseSpeed = 6; // un-boosted speed for the current room
+  private speedBoostT = 0; // tennis-ball speed boost remaining
+  private freezeT = 0; // slipper freeze remaining (vacuums held still)
 
   private elapsed = 0;
   private frightenedT = 0;
@@ -117,6 +120,9 @@ export class Game {
     this.toy = null;
     this.toysSpawned = 0;
     this.invulnT = INVULN_TIME;
+    this.bakBaseSpeed = diff.bakSpeed;
+    this.speedBoostT = 0;
+    this.freezeT = 0;
     if (this.isBoss) {
       this.boss = new Boss(BOSS_CENTER);
       this.vacuums = this.makeMinions(diff.vacSpeed);
@@ -138,6 +144,9 @@ export class Game {
     this.elapsed = 0;
     this.frightenedT = 0;
     this.invulnT = INVULN_TIME;
+    this.bakBaseSpeed = diff.bakSpeed;
+    this.speedBoostT = 0;
+    this.freezeT = 0;
     this.mode = 'ready';
     this.modeTimer = READY_TIME;
   }
@@ -226,6 +235,39 @@ export class Game {
     this.modeTimer = DEATH_TIME;
   }
 
+  /** Apply a bonus toy's power-up (each toy type does something different). */
+  private collectToy(toy: Toy): void {
+    const x = this.vp.cx(toy.tile.c);
+    const y = this.vp.cy(toy.tile.r);
+    this.audio.sfx('toy');
+    this.effects.poof(x, y, '#ffcf5a');
+    switch (toy.type) {
+      case 'toy-ball': // Fetch frenzy — Bak speeds up
+        this.score += toy.value;
+        this.speedBoostT = 5;
+        this.bak.setSpeed(this.bakBaseSpeed * 1.6);
+        this.effects.popup(x, y, 'FETCH!', '#79ff5b');
+        break;
+      case 'toy-duck': // Squeak — scare the vacuums, like a free bone
+        this.score += toy.value;
+        this.frightenedT = this.frightenedSecs;
+        this.chain = 0;
+        for (const v of this.vacuums) v.frighten();
+        this.effects.popup(x, y, 'SQUEAK!', '#9fd0ff');
+        break;
+      case 'toy-slipper': // Gotcha — freeze the vacuums in place
+        this.score += toy.value;
+        this.freezeT = 3;
+        this.effects.popup(x, y, 'FREEZE!', '#00fbfb');
+        break;
+      default: { // toy-bowl — jackpot points
+        const pts = toy.value * 3;
+        this.score += pts;
+        this.effects.popup(x, y, `+${pts}`, '#ffcf5a');
+      }
+    }
+  }
+
   private playStep(dt: number): void {
     this.elapsed += dt;
     if (this.invulnT > 0) this.invulnT -= dt;
@@ -259,19 +301,24 @@ export class Game {
       if (this.frightenedT <= 0) for (const v of this.vacuums) v.unfrighten();
     }
 
-    // Bonus toy: appears as Bak clears the room, despawns on a timer, scores when eaten.
+    // Bonus-toy effect timers.
+    if (this.speedBoostT > 0) {
+      this.speedBoostT -= dt;
+      if (this.speedBoostT <= 0) this.bak.setSpeed(this.bakBaseSpeed);
+    }
+    if (this.freezeT > 0) this.freezeT -= dt;
+
+    // Bonus toy: appears as Bak clears the room, despawns on a timer, triggers a power-up when eaten.
     const frac = this.baconStart > 0 ? (this.baconStart - this.maze.baconRemaining()) / this.baconStart : 0;
     if (this.toysSpawned < TOY_THRESHOLDS.length && frac >= TOY_THRESHOLDS[this.toysSpawned]) {
-      this.toy = spawnToy(this.roomIndex);
+      this.toy = spawnToy(this.roomIndex, this.toysSpawned);
       this.toysSpawned++;
     }
     if (this.toy) {
       this.toy.timer -= dt;
       if (this.toy.timer <= 0) this.toy = null;
       else if (tileEq(this.bak.mover.tile, this.toy.tile)) {
-        this.score += this.toy.value;
-        this.audio.sfx('toy');
-        this.effects.popup(this.vp.cx(this.toy.tile.c), this.vp.cy(this.toy.tile.r), `${this.toy.value}`, '#ffcf5a');
+        this.collectToy(this.toy);
         this.toy = null;
       }
     }
@@ -283,7 +330,9 @@ export class Game {
       corners: this.layout.scatterCorners,
       mode,
     };
-    for (const v of this.vacuums) v.update(this.maze, aiCtx, dt);
+    if (this.freezeT <= 0) {
+      for (const v of this.vacuums) v.update(this.maze, aiCtx, dt);
+    }
 
     const bp = moverPos(this.bak.mover);
     for (const v of this.vacuums) {
@@ -345,7 +394,9 @@ export class Game {
       corners: this.layout.scatterCorners,
       mode,
     };
-    for (const v of this.vacuums) v.update(this.maze, aiCtx, dt);
+    if (this.freezeT <= 0) {
+      for (const v of this.vacuums) v.update(this.maze, aiCtx, dt);
+    }
 
     const bp = moverPos(this.bak.mover);
 
