@@ -27,7 +27,7 @@ export function difficulty(index: number): Difficulty {
   const t = Math.min(index, 12);
   return {
     bakSpeed: 6 + t * 0.1,
-    vacSpeed: 5.2 + t * 0.18,
+    vacSpeed: 4.7 + t * 0.16,
     frightenedMs: Math.max(2000, 6000 - t * 350),
   };
 }

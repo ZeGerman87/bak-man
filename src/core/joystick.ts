@@ -9,7 +9,8 @@ import { drawSprite } from '../render/renderer';
  * (clamped to the base), and its offset chooses a cardinal direction for Bak.
  */
 export class Joystick {
-  dir: Dir | null = null;
+  primary: Dir | null = null;
+  secondary: Dir | null = null;
   private cx = 0;
   private cy = 0;
   private baseR = 60;
@@ -42,12 +43,19 @@ export class Joystick {
     });
     const end = (): void => {
       this.active = false;
-      this.dir = null;
+      this.primary = null;
+      this.secondary = null;
       this.knobX = this.cx;
       this.knobY = this.cy;
     };
     el.addEventListener('pointerup', end);
     el.addEventListener('pointercancel', end);
+  }
+
+  /** Ordered steering intent: [primary] or [primary, fallback], or null when idle. */
+  get intent(): Dir[] | null {
+    if (!this.primary) return null;
+    return this.secondary ? [this.primary, this.secondary] : [this.primary];
   }
 
   private set(x: number, y: number): void {
@@ -60,8 +68,21 @@ export class Joystick {
     }
     this.knobX = this.cx + dx;
     this.knobY = this.cy + dy;
-    if (Math.hypot(dx, dy) > this.baseR * 0.28) {
-      this.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+    const dead = this.baseR * 0.2;
+    const sub = this.baseR * 0.18; // even a slight minor-axis tilt registers as a fallback turn
+    if (Math.hypot(dx, dy) < dead) {
+      this.primary = null;
+      this.secondary = null;
+      return;
+    }
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    if (ax >= ay) {
+      this.primary = dx > 0 ? 'right' : 'left';
+      this.secondary = ay > sub ? (dy > 0 ? 'down' : 'up') : null;
+    } else {
+      this.primary = dy > 0 ? 'down' : 'up';
+      this.secondary = ax > sub ? (dx > 0 ? 'right' : 'left') : null;
     }
   }
 

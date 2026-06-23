@@ -1,6 +1,6 @@
 import type { Viewport } from '../core/viewport';
 import { type AssetStore, getAsset } from '../core/assets';
-import { drawSprite } from '../render/renderer';
+import { drawSprite, centroidX } from '../render/renderer';
 
 function dim(ctx: CanvasRenderingContext2D, vp: Viewport, a = 0.62): void {
   ctx.fillStyle = `rgba(20,14,10,${a})`;
@@ -18,8 +18,12 @@ function center(ctx: CanvasRenderingContext2D, text: string, x: number, y: numbe
 export function drawTitle(ctx: CanvasRenderingContext2D, vp: Viewport, assets: AssetStore, high: number, t: number): void {
   dim(ctx, vp, 0.86);
   const cx = vp.cssW / 2;
-  drawSprite(ctx, getAsset(assets, 'logo'), cx, vp.cssH * 0.3, Math.min(vp.cssW * 0.8, 360));
-  drawSprite(ctx, getAsset(assets, 'bak'), cx, vp.cssH * 0.52, Math.min(vp.cssW * 0.34, 150));
+  const logo = getAsset(assets, 'logo');
+  const logoBox = Math.min(vp.cssW * 0.8, 360);
+  drawSprite(ctx, logo, cx + (0.5 - centroidX(logo)) * logoBox, vp.cssH * 0.3, logoBox);
+  const dog = getAsset(assets, 'bak');
+  const dogBox = Math.min(vp.cssW * 0.34, 150);
+  drawSprite(ctx, dog, cx + (0.5 - centroidX(dog)) * dogBox, vp.cssH * 0.52, dogBox);
   if (Math.floor(t * 1.5) % 2 === 0) center(ctx, 'tap to start', cx, vp.cssH * 0.66, '#ff7a1a', 24);
   center(ctx, `HIGH  ${high}`, cx, vp.cssH * 0.72, '#d8c4ad', 16, '600');
   center(ctx, 'swipe or arrow keys to move', cx, vp.cssH * 0.78, '#8a7560', 13, '600');

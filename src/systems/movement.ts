@@ -6,12 +6,13 @@ export interface Mover {
   tile: Tile;
   dir: Dir;
   pending: Dir | null;
+  pending2: Dir | null; // fallback turn, tried when `pending` is blocked (diagonal joystick)
   progress: number;
   speed: number; // tiles per second
 }
 
 export function makeMover(spawn: Tile, dir: Dir, speed: number): Mover {
-  return { tile: { c: spawn.c, r: spawn.r }, dir, pending: null, progress: 0, speed };
+  return { tile: { c: spawn.c, r: spawn.r }, dir, pending: null, pending2: null, progress: 0, speed };
 }
 
 function walkable(maze: Maze, t: Tile, d: Dir): boolean {
@@ -34,6 +35,11 @@ export function step(maze: Maze, m: Mover, dt: number): { entered: boolean; move
       if (m.pending && walkable(maze, m.tile, m.pending)) {
         m.dir = m.pending;
         m.pending = null;
+        m.pending2 = null;
+      } else if (m.pending2 && walkable(maze, m.tile, m.pending2)) {
+        m.dir = m.pending2;
+        m.pending = null;
+        m.pending2 = null;
       }
       if (!walkable(maze, m.tile, m.dir)) {
         const w = maze.warp(m.tile, m.dir);

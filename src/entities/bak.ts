@@ -20,8 +20,16 @@ export class Bak {
     this.chomp = 0;
   }
 
-  update(maze: Maze, desired: Dir | null, dt: number): { entered: boolean } {
-    if (desired) this.mover.pending = desired;
+  update(maze: Maze, desired: Dir | Dir[] | null, dt: number): { entered: boolean } {
+    if (desired) {
+      if (Array.isArray(desired)) {
+        this.mover.pending = desired[0] ?? null;
+        this.mover.pending2 = desired[1] ?? null;
+      } else {
+        this.mover.pending = desired;
+        this.mover.pending2 = null;
+      }
+    }
     const { entered, moved } = step(maze, this.mover, dt);
     this.chomp = (this.chomp + moved * 1.6) % 1;
     return { entered };

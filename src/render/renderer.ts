@@ -46,6 +46,41 @@ export function drawSprite(
   ctx.restore();
 }
 
+const _centroid = new WeakMap<Sprite, number>();
+/**
+ * Normalized horizontal centroid (0..1) of a sprite's opaque pixels, cached.
+ * Used to optically center art (e.g. the logo) whose visual mass is off-center
+ * within an otherwise symmetric bounding box.
+ */
+export function centroidX(img: Sprite): number {
+  const cached = _centroid.get(img);
+  if (cached !== undefined) return cached;
+  let r = 0.5;
+  try {
+    const cv = document.createElement('canvas');
+    cv.width = img.width;
+    cv.height = img.height;
+    const c = cv.getContext('2d')!;
+    c.drawImage(img, 0, 0);
+    const d = c.getImageData(0, 0, img.width, img.height).data;
+    let sx = 0;
+    let n = 0;
+    for (let y = 0; y < img.height; y++) {
+      for (let x = 0; x < img.width; x++) {
+        if (d[(y * img.width + x) * 4 + 3] > 40) {
+          sx += x;
+          n++;
+        }
+      }
+    }
+    if (n) r = sx / n / img.width;
+  } catch {
+    /* cross-origin/tainted canvas — fall back to geometric center */
+  }
+  _centroid.set(img, r);
+  return r;
+}
+
 function drawFloor(ctx: CanvasRenderingContext2D, vp: Viewport, layout: Layout, assets: AssetStore): void {
   const x = vp.sx(0);
   const y = vp.sy(0);

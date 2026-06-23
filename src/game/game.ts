@@ -29,7 +29,7 @@ const BOSS_EXIT: Tile = { c: 9, r: 12 };
 const READY_TIME = 1.4;
 const DEATH_TIME = 1.1;
 const CLEAR_TIME = 1.2;
-const VAC_RELEASE = 0.8; // seconds between each vacuum leaving the dock
+const VAC_RELEASE = 1.6; // seconds between each vacuum leaving the dock
 const INVULN_TIME = 2.2; // grace period after (re)spawning
 
 export class Game {
@@ -231,7 +231,7 @@ export class Game {
     if (this.invulnT > 0) this.invulnT -= dt;
     const mode = phaseAt(this.elapsed, this.roomIndex);
 
-    const { entered } = this.bak.update(this.maze, this.joystick.dir ?? this.input.desired, dt);
+    const { entered } = this.bak.update(this.maze, this.joystick.intent ?? this.input.desired, dt);
     if (entered) {
       const eaten = this.maze.eatAt(this.bak.mover.tile.c, this.bak.mover.tile.r);
       if (eaten === 'bacon') {
@@ -312,7 +312,7 @@ export class Game {
     if (this.invulnT > 0) this.invulnT -= dt;
     const mode = phaseAt(this.elapsed, this.roomIndex);
 
-    const { entered } = this.bak.update(this.maze, this.joystick.dir ?? this.input.desired, dt);
+    const { entered } = this.bak.update(this.maze, this.joystick.intent ?? this.input.desired, dt);
     if (entered) {
       const eaten = this.maze.eatAt(this.bak.mover.tile.c, this.bak.mover.tile.r);
       if (eaten === 'bacon') {
