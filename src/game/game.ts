@@ -45,7 +45,8 @@ export class Game {
   private boss: Boss | null = null;
   private isBoss = false;
   private effects = new Effects();
-  private toy: Toy | null = null;
+  private toys: Toy[] = [];
+  private spawnTiles: Tile[] = [];
   private baconStart = 0;
   private toysSpawned = 0;
   private invulnT = 0;
@@ -118,7 +119,8 @@ export class Game {
     this.frightenedT = 0;
     this.chain = 0;
     this.baconStart = this.maze.baconRemaining();
-    this.toy = null;
+    this.toys = [];
+    this.spawnTiles = this.maze.spawnableTiles();
     this.toysSpawned = 0;
     this.invulnT = INVULN_TIME;
     this.bakBaseSpeed = diff.bakSpeed;
@@ -150,6 +152,7 @@ export class Game {
     this.speedBoostT = 0;
     this.freezeT = 0;
     this.roomIntro = false;
+    this.toys = [];
     this.mode = 'ready';
     this.modeTimer = READY_TIME;
   }
@@ -238,6 +241,15 @@ export class Game {
     this.modeTimer = DEATH_TIME;
   }
 
+  /** A random corridor tile for a new toy, avoiding Bak's tile and existing toys. */
+  private pickToyTile(): Tile | null {
+    const taken = new Set(this.toys.map((t) => `${t.tile.c},${t.tile.r}`));
+    taken.add(`${this.bak.mover.tile.c},${this.bak.mover.tile.r}`);
+    const cands = this.spawnTiles.filter((t) => !taken.has(`${t.c},${t.r}`));
+    if (!cands.length) return null;
+    return cands[(Math.random() * cands.length) | 0];
+  }
+
   /** Apply a bonus toy's power-up (each toy type does something different). */
   private collectToy(toy: Toy): void {
     const x = this.vp.cx(toy.tile.c);
@@ -317,16 +329,21 @@ export class Game {
     // Bonus toy: appears as Bak clears the room, despawns on a timer, triggers a power-up when eaten.
     const frac = this.baconStart > 0 ? (this.baconStart - this.maze.baconRemaining()) / this.baconStart : 0;
     if (this.toysSpawned < TOY_THRESHOLDS.length && frac >= TOY_THRESHOLDS[this.toysSpawned]) {
-      this.toy = spawnToy(this.roomIndex, this.toysSpawned);
+      const tile = this.pickToyTile();
+      if (tile) {
+        this.toys.push(spawnToy(tile, this.roomIndex, this.toysSpawned));
+        this.effects.poof(this.vp.cx(tile.c), this.vp.cy(tile.r), '#ffcf5a', 10);
+      }
       this.toysSpawned++;
-      this.effects.poof(this.vp.cx(this.toy.tile.c), this.vp.cy(this.toy.tile.r), '#ffcf5a', 10);
     }
-    if (this.toy) {
-      this.toy.timer -= dt;
-      if (this.toy.timer <= 0) this.toy = null;
-      else if (tileEq(this.bak.mover.tile, this.toy.tile)) {
-        this.collectToy(this.toy);
-        this.toy = null;
+    for (let i = this.toys.length - 1; i >= 0; i--) {
+      const toy = this.toys[i];
+      toy.timer -= dt;
+      if (toy.timer <= 0) {
+        this.toys.splice(i, 1);
+      } else if (tileEq(this.bak.mover.tile, toy.tile)) {
+        this.collectToy(toy);
+        this.toys.splice(i, 1);
       }
     }
 
@@ -493,7 +510,7 @@ export class Game {
         bak: this.bak,
         vacuums: this.vacuums,
         boss: this.boss,
-        toy: this.toy,
+        toys: this.toys,
         frightenedEnding: this.frightenedT > 0 && this.frightenedT < 2,
         bakHidden: this.invulnT > 0 && Math.floor(this.t * 10) % 2 === 0,
       },

@@ -156,7 +156,7 @@ export interface RenderEntities {
   bak: Bak;
   vacuums?: Vacuum[];
   boss?: Boss | null;
-  toy?: { tile: { c: number; r: number }; type: string } | null;
+  toys?: Array<{ tile: { c: number; r: number }; type: string }>;
   frightenedEnding?: boolean; // flash near the end of the power-up
   bakHidden?: boolean; // blink during respawn invulnerability
 }
@@ -215,12 +215,14 @@ export function drawScene(
   drawWalls(ctx, vp, maze, layout);
   drawDots(ctx, vp, maze, assets);
 
-  if (ents.toy) {
-    ctx.save();
-    ctx.shadowColor = '#ffcf5a';
-    ctx.shadowBlur = vp.tile * 0.4;
-    drawSprite(ctx, getAsset(assets, ents.toy.type), vp.cx(ents.toy.tile.c), vp.cy(ents.toy.tile.r), vp.tile * 1.25);
-    ctx.restore();
+  if (ents.toys) {
+    for (const toy of ents.toys) {
+      ctx.save();
+      ctx.shadowColor = '#ffcf5a';
+      ctx.shadowBlur = vp.tile * 0.4;
+      drawSprite(ctx, getAsset(assets, toy.type), vp.cx(toy.tile.c), vp.cy(toy.tile.r), vp.tile * 1.25);
+      ctx.restore();
+    }
   }
   if (ents.boss) drawBoss(ctx, vp, ents.boss, assets);
   if (ents.vacuums) drawVacuums(ctx, vp, ents.vacuums, assets, !!ents.frightenedEnding);

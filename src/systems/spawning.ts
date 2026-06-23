@@ -21,7 +21,7 @@ export function toyForRoom(roomIndex: number, appearance = 0): { type: string; v
   return { type: TOY_TYPES[(roomIndex * 2 + appearance) % TOY_TYPES.length], value: 100 + roomIndex * 100 };
 }
 
-export function spawnToy(roomIndex: number, appearance = 0): Toy {
+export function spawnToy(tile: Tile, roomIndex: number, appearance = 0): Toy {
   const { type, value } = toyForRoom(roomIndex, appearance);
-  return { tile: { ...TOY_SPOT }, type, value, timer: TOY_DURATION };
+  return { tile: { ...tile }, type, value, timer: TOY_DURATION };
 }

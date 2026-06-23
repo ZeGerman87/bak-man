@@ -92,6 +92,18 @@ export class Maze {
     return out;
   }
 
+  /** Corridor tiles a bonus toy may spawn on: walkable, outside the dock and warp edges. */
+  spawnableTiles(): Tile[] {
+    const bad = new Set(['#', '1', '2', '3', '4', '-', 'D', '=']);
+    const out: Tile[] = [];
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        if (!bad.has(this.cell(c, r))) out.push({ c, r });
+      }
+    }
+    return out;
+  }
+
   /**
    * If `tile` is a warp edge ('=') and moving `dir` runs into the border,
    * return the paired warp tile on the opposite side of the same row/column.
