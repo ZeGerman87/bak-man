@@ -29,8 +29,26 @@ export function drawTitle(ctx: CanvasRenderingContext2D, vp: Viewport, assets: A
   center(ctx, 'swipe or arrow keys to move', cx, vp.cssH * 0.78, '#8a7560', 13, '600');
 }
 
-export function drawReady(ctx: CanvasRenderingContext2D, vp: Viewport): void {
-  center(ctx, 'READY!', vp.cssW / 2, vp.originY + vp.tile * vp.rows * 0.62, '#ffcf5a', 30);
+export function drawReady(
+  ctx: CanvasRenderingContext2D,
+  vp: Viewport,
+  intro: boolean,
+  title: string,
+  subtitle: string,
+): void {
+  const cy = vp.originY + vp.tile * vp.rows * 0.5;
+  if (intro) {
+    center(ctx, title, vp.cssW / 2, cy - 16, '#ffcf5a', 36);
+    center(ctx, subtitle, vp.cssW / 2, cy + 22, '#ff7a1a', 20, '600');
+  } else {
+    center(ctx, 'READY!', vp.cssW / 2, cy, '#ffcf5a', 30);
+  }
+}
+
+export function drawCleared(ctx: CanvasRenderingContext2D, vp: Viewport, level: number): void {
+  const cy = vp.originY + vp.tile * vp.rows * 0.42;
+  center(ctx, 'ROOM CLEAR!', vp.cssW / 2, cy, '#ffcf5a', 36);
+  center(ctx, `Good boy, Bak!  ·  Level ${level} done`, vp.cssW / 2, cy + 28, '#fff7ec', 16, '600');
 }
 
 export function drawPaused(ctx: CanvasRenderingContext2D, vp: Viewport): void {

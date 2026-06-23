@@ -17,7 +17,7 @@ import { Effects } from '../render/particles';
 import { type Toy, spawnToy, TOY_THRESHOLDS } from '../systems/spawning';
 import { getHighScore, setHighScore } from '../core/storage';
 import type { Audio } from '../core/audio';
-import { drawTitle, drawReady, drawPaused, drawGameOver, drawWin } from '../ui/screens';
+import { drawTitle, drawReady, drawCleared, drawPaused, drawGameOver, drawWin } from '../ui/screens';
 
 type Mode = 'title' | 'ready' | 'playing' | 'dying' | 'cleared' | 'win' | 'gameover' | 'paused';
 
@@ -28,7 +28,7 @@ const BOSS_CENTER: Tile = { c: 9, r: 9 };
 const BOSS_EXIT: Tile = { c: 9, r: 12 };
 const READY_TIME = 1.4;
 const DEATH_TIME = 1.1;
-const CLEAR_TIME = 1.2;
+const CLEAR_TIME = 1.9;
 const VAC_RELEASE = 5; // seconds between each vacuum leaving the dock
 const INVULN_TIME = 2.2; // grace period after (re)spawning
 
@@ -50,6 +50,7 @@ export class Game {
   private toysSpawned = 0;
   private invulnT = 0;
   private joystick = new Joystick();
+  private roomIntro = false; // true while the 'ready' card is a new-level intro (vs a respawn)
   private bakBaseSpeed = 6; // un-boosted speed for the current room
   private speedBoostT = 0; // tennis-ball speed boost remaining
   private freezeT = 0; // slipper freeze remaining (vacuums held still)
@@ -123,6 +124,7 @@ export class Game {
     this.bakBaseSpeed = diff.bakSpeed;
     this.speedBoostT = 0;
     this.freezeT = 0;
+    this.roomIntro = true;
     if (this.isBoss) {
       this.boss = new Boss(BOSS_CENTER);
       this.vacuums = this.makeMinions(diff.vacSpeed);
@@ -147,6 +149,7 @@ export class Game {
     this.bakBaseSpeed = diff.bakSpeed;
     this.speedBoostT = 0;
     this.freezeT = 0;
+    this.roomIntro = false;
     this.mode = 'ready';
     this.modeTimer = READY_TIME;
   }
@@ -290,6 +293,9 @@ export class Game {
         this.effects.popup(s.x, s.y, '+50', '#ffcf5a');
       }
       if (this.maze.baconRemaining() === 0) {
+        const left = this.vp.sx(0);
+        this.effects.confetti(left, left + this.vp.tile * this.vp.cols, this.vp.sy(0));
+        this.audio.sfx('win');
         this.mode = 'cleared';
         this.modeTimer = CLEAR_TIME;
         return;
@@ -511,7 +517,10 @@ export class Game {
         drawTitle(ctx, this.vp, this.assets, this.high, this.t);
         break;
       case 'ready':
-        drawReady(ctx, this.vp);
+        drawReady(ctx, this.vp, this.roomIntro, this.isBoss ? 'FINAL BOSS' : `LEVEL ${this.roomIndex + 1}`, this.layout.name);
+        break;
+      case 'cleared':
+        drawCleared(ctx, this.vp, this.roomIndex + 1);
         break;
       case 'paused':
         drawPaused(ctx, this.vp);

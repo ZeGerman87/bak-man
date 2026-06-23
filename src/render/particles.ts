@@ -45,6 +45,23 @@ export class Effects {
     this.popups.push({ x, y, text, life: 0.9, color });
   }
 
+  /** Celebratory rain of multi-coloured confetti across [left,right], falling from `top`. */
+  confetti(left: number, right: number, top: number, n = 80): void {
+    const colors = ['#ff7a1a', '#ffcf5a', '#79ff5b', '#9fd0ff', '#ff5ea8', '#00fbfb', '#ffffff'];
+    for (let i = 0; i < n; i++) {
+      this.particles.push({
+        x: left + Math.random() * (right - left),
+        y: top - 20 - Math.random() * 60,
+        vx: (Math.random() * 2 - 1) * 70,
+        vy: 30 + Math.random() * 90,
+        life: 1.2 + Math.random() * 0.9,
+        max: 2.1,
+        r: 2.5 + Math.random() * 3.5,
+        color: colors[(Math.random() * colors.length) | 0],
+      });
+    }
+  }
+
   addShake(a: number): void {
     this.shake = Math.min(16, Math.max(this.shake, a));
   }
